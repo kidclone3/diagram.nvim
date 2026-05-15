@@ -32,7 +32,7 @@ With **lazy.nvim**:
 
 ```lua
 {
-  "3rd/diagram.nvim",
+  "kidclone3/diagram.nvim",
   dependencies = {
     { "3rd/image.nvim", opts = {} }, -- you'd probably want to configure image.nvim manually instead of doing this
   },
@@ -143,9 +143,9 @@ You can add a keymap to view diagrams in a dedicated tab. Place your cursor insi
 
 ```lua
 {
-  "3rd/diagram.nvim",
-  dependencies = {
-    "3rd/image.nvim",
+    "kidclone3/diagram.nvim",
+    dependencies = {
+      "3rd/image.nvim",
   },
   opts = {
     -- Disable automatic rendering for manual-only workflow
