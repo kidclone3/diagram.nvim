@@ -48,7 +48,7 @@ M.render = function(source, options)
     table.insert(command_parts, options.charset)
   end
   table.insert(command_parts, "<")
-  table.insert(command_parts, tmpsource)
+  table.insert(command_parts, vim.fn.shellescape(tmpsource))
 
   local command = table.concat(command_parts, " ")
 
@@ -63,9 +63,8 @@ M.render = function(source, options)
         end
       end,
       on_exit = function(job_id, exit_code, event)
-        -- local msg = string.format("Job %d exited with code %d.", job_id, exit_code)
-        -- vim.api.nvim_out_write(msg .. "\n")
-        vim.fn.rename(path .. ".new.png", path) -- HACK: rename to remove .new.png
+        vim.fn.delete(tmpsource)
+        vim.fn.rename(path .. ".new.png", path)
       end,
     }
   )

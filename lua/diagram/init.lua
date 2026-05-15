@@ -2,6 +2,8 @@ local hover = require("diagram/hover")
 local image_nvim = require("image")
 local integrations = require("diagram/integrations")
 
+vim.uv = vim.uv or vim.loop
+
 ---@class State
 local state = {
   events = {
@@ -44,9 +46,15 @@ local state = {
 }
 
 local clear_buffer = function(bufnr)
+  local remaining = {}
   for _, diagram in ipairs(state.diagrams) do
-    if diagram.bufnr == bufnr and diagram.image ~= nil then diagram.image:clear() end
+    if diagram.bufnr == bufnr then
+      if diagram.image ~= nil then diagram.image:clear() end
+    else
+      remaining[#remaining + 1] = diagram
+    end
   end
+  state.diagrams = remaining
 end
 
 ---@param bufnr number
@@ -101,12 +109,17 @@ local render_buffer = function(bufnr, winnr, integration)
 
     if renderer_result.job_id then
       -- Use a timer to poll the job's completion status every 100ms.
-      local timer = vim.loop.new_timer()
+      local timer = vim.uv.new_timer()
       if not timer then return end
       timer:start(
         0,
         100,
         vim.schedule_wrap(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_win_is_valid(winnr) then
+            if timer:is_active() then timer:stop() end
+            if not timer:is_closing() then timer:close() end
+            return
+          end
           local result = vim.fn.jobwait({ renderer_result.job_id }, 0)
           if result[1] ~= -1 then
             if timer:is_active() then timer:stop() end
@@ -140,6 +153,7 @@ local setup = function(opts)
     end
   end
   state.renderer_options = vim.tbl_deep_extend("force", state.renderer_options, opts.renderer_options or {})
+  state.events = vim.tbl_deep_extend("force", state.events, opts.events or {})
 
   local current_bufnr = vim.api.nvim_get_current_buf()
   local current_winnr = vim.api.nvim_get_current_win()

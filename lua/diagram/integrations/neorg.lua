@@ -17,6 +17,8 @@ local M = {
 }
 
 M.query_buffer_diagrams = function(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
   if not query then
     query = ts_query.parse(
       "norg",
@@ -30,12 +32,11 @@ M.query_buffer_diagrams = function(bufnr)
     )
   end
 
-  local buf = bufnr or vim.api.nvim_get_current_buf()
-  local parser = vim.treesitter.get_parser(buf, "norg")
+  local parser = vim.treesitter.get_parser(bufnr, "norg")
   parser:parse(true)
 
   local root = parser:parse()[1]:root()
-  local matches = query:iter_captures(root, buf)
+  local matches = query:iter_captures(root, bufnr)
 
   ---@type Diagram[]
   local diagrams = {}
@@ -45,7 +46,7 @@ M.query_buffer_diagrams = function(bufnr)
 
   for id, node in matches do
     local key = query.captures[id]
-    local value = vim.treesitter.get_node_text(node, buf)
+    local value = vim.treesitter.get_node_text(node, bufnr)
 
     if key == "tag_name" then
       local start_row, start_col, _, _ = node:range()
@@ -68,7 +69,7 @@ M.query_buffer_diagrams = function(bufnr)
         current_range.end_row = end_row
         current_range.end_col = end_col
         table.insert(diagrams, {
-          bufnr = buf,
+          bufnr = bufnr,
           renderer_id = current_language,
           source = value,
           range = current_range,

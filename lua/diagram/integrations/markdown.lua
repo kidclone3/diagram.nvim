@@ -17,12 +17,13 @@ local M = {
 }
 
 M.query_buffer_diagrams = function(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
   if not query then
     query = ts_query.parse("markdown", "(fenced_code_block (info_string) @info (code_fence_content) @code)")
   end
 
-  local buf = bufnr or vim.api.nvim_get_current_buf()
-  local parser = vim.treesitter.get_parser(buf, "markdown")
+  local parser = vim.treesitter.get_parser(bufnr, "markdown")
   parser:parse(true)
 
   local root = parser:parse()[1]:root()

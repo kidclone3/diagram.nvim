@@ -1,5 +1,7 @@
 local image_nvim = require("image")
 
+vim.uv = vim.uv or vim.loop
+
 local M = {}
 
 local function show_loading_notification(diagram_type)
@@ -113,6 +115,11 @@ M.show_diagram_hover = function(diagram, integrations, renderer_options)
   local options = renderer_options[renderer.id] or {}
   local renderer_result = renderer.render(diagram.source, options)
 
+  if not renderer_result then
+    vim.notify("Renderer not found or failed", vim.log.levels.ERROR)
+    return
+  end
+
   local function show_in_tab()
     if vim.fn.filereadable(renderer_result.file_path) == 0 then
       vim.notify("Diagram file not found: " .. renderer_result.file_path, vim.log.levels.ERROR)
@@ -179,7 +186,7 @@ M.show_diagram_hover = function(diagram, integrations, renderer_options)
 
   if renderer_result.job_id then
     -- Wait for async rendering
-    local timer = vim.loop.new_timer()
+    local timer = vim.uv.new_timer()
     if not timer then return end
     timer:start(
       0,
